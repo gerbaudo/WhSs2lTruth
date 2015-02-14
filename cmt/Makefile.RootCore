@@ -6,13 +6,13 @@
 # https://twiki.cern.ch/twiki/bin/viewauth/Atlas/RootCore#Package_Makefile
 
 PACKAGE          = WhSs2lTruth
-PACKAGE_PRELOAD  = 
+PACKAGE_PRELOAD  = Tree
 PACKAGE_CXXFLAGS = 
 PACKAGE_OBJFLAGS = 
 PACKAGE_LDFLAGS  = 
-PACKAGE_BINFLAGS = 
+PACKAGE_BINFLAGS = -lCintex -lReflex -lPyROOT -lXMLParser -lEG
 PACKAGE_LIBFLAGS = 
-PACKAGE_DEP      = 
+PACKAGE_DEP      = SusyNtuple Mt2
 PACKAGE_TRYDEP   = 
 PACKAGE_CLEAN    = 
 PACKAGE_NOGRID   = 

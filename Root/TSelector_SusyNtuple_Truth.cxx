@@ -1,10 +1,11 @@
-#include <iomanip>
+#include "Mt2/mt2_bisect.h"
+#include "WhSs2lTruth/TSelector_SusyNtuple_Truth.h"
+
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TChainElement.h"
 
-#include "TSelector_SusyNtuple_Truth.hpp"
-#include "histos_WH_analysis_Truth.C"
+#include <iomanip>
 #include <string>
 #include <strstream>
 using namespace std;
@@ -45,28 +46,15 @@ void TSelector_SusyNtuple_Truth::Begin(TTree * /*tree*/)
 }
 void TSelector_SusyNtuple_Truth::SlaveBegin(TTree* /*tree*/)
 {
+    calcSysUncert = true;
+    makeNTuple = false;
+    defineHistos();
+    if(calcSysUncert) defineHistos_sysUncert();
+    SusyNtTruthAna::Begin(0);
+    m_trigObjWithoutRU = new DilTrigLogic("Moriond",false/*No Reweight Utils!*/);
 
-  calcSysUncert = true;
-  makeNTuple = false;
-  defineHistos();
-  if(calcSysUncert) defineHistos_sysUncert();
-
-
-  SusyNtTruthAna::Begin(0);
-
-
-  m_trigObjWithoutRU = new DilTrigLogic("Moriond",false/*No Reweight Utils!*/);
-
-  cout << "initialize chargeFlip tool" << endl;
-
-//   m_chargeFlip.initialize("/data/etp3/jwittkow/analysis_SUSYTools_03_04_SusyNt_01_16/ChargeFlip/data/d0_new2d_chargeflip_map.root");
-
-//   m_matrix = new SusyMatrixMethod::DiLeptonMatrixMethod();
-//   m_matrix->configure("/data/etp3/jwittkow/analysis_SUSYTools_03_04_SusyNt_01_16/SusyMatrixMethod/data/FinalFakeHist_Feb_02.root", SusyMatrixMethod::PT, SusyMatrixMethod::PT, SusyMatrixMethod::PT, SusyMatrixMethod::PT);
-  if(makeNTuple) initTupleMaker("/data/etp3/jwittkow/analysis_SUSYTools_03_04_SusyNt_01_16/SusySel_Egamma_6_NEW.root", "SusySel");
-//   string xsecFileName  = gSystem->ExpandPathName("/data/etp3/jwittkow/analysis_SUSYTools_03_04_SusyNt_01_16/SUSYTools/data/susy_crosssections_8TeV.txt");
-//   m_susyXsec = new SUSY::CrossSectionDB("/data/etp3/jwittkow/analysis_SUSYTools_03_04_SusyNt_01_16/SUSYTools/data/mc12_8TeV/Herwigpp_UEEE3_CTEQ6L1_simplifiedModel_wA.txt");
-
+    cout << "initialize chargeFlip tool" << endl;
+    if(makeNTuple) initTupleMaker("/data/etp3/jwittkow/analysis_SUSYTools_03_04_SusyNt_01_16/SusySel_Egamma_6_NEW.root", "SusySel");
 }
 
 
@@ -150,72 +138,9 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
   TruthParticleVector truthTaus      = getPreTruthLeptons(&nt,15);// 20 GeV, |eta|<2.5
   TruthJetVector truthJets      = getPreTruthJets   (&nt   ); // 20 GeV, |eta|<4.5
 
-//   cout << "event " << nt.evt()->event << endl;
-
-//   for(uint index=0; index<nt.tpr()->size(); ++index){
-//     TruthParticle* particle = & nt.tpr()->at(index);
-//     if(fabs(particle->pdgId) == 11) {
-//       cout << "truth particle pt " << particle->Pt() << ", eta " << particle->Eta() << endl;
-//     }
-//   }
-//   for (int i=0; i<truthTaus.size(); i++){
-//     const TruthParticle* t = truthTaus.at(i);
-//     cout << "t->Pt()= " << t->Pt() << endl;
-//   }
-
-//   for(uint index=0; index<nt.tjt()->size(); ++index){
-//     TruthJet* jet = & nt.tjt()->at(index);
-//     cout << "jet pt " << jet->Pt() << " eta " << jet->Eta() << endl;
-//   }
-//   for (int i=0; i<truthJets.size(); i++){
-//     const TruthJet* j = truthJets.at(i);
-//     cout << "j->Pt()= " << j->Pt() << endl;
-//   }
-//   for (int i=0; i<truthMuons.size(); i++){
-//     const TruthParticle* m = truthMuons.at(i);
-//     cout << "m->Pt()= " << m->Pt() << endl;
-//     for (int k=0; k<truthMuons.size(); k++){
-//       if (i==k) continue;
-//       const TruthParticle* m1 = truthMuons.at(k);
-//       cout << "m1->Pt()= " << m1->Pt() << endl;
-//       cout << "m1->DeltaR(*m) " << m1->DeltaR(*m) << " q*q " << m->charge*m1->charge << " mll " << SusyNtAna::Mll(m,m1) <<  endl;
-//     }
-//   }
   overlapProcedure(truthElectrons, truthMuons, truthTaus, truthJets);
-//   cout << "after overlapProcedure(): " << endl;
-//   for (int i=0; i<truthElectrons.size(); i++){
-//     const TruthParticle* e = truthElectrons.at(i);
-//     cout << "e->Pt()= " << e->Pt() << endl;
-//     for (int k=0; k<truthJets.size(); k++){
-//       const TruthJet* j = truthJets.at(k);
-//       cout << "j->Pt()= " << j->Pt() << endl;
-//       cout << "j->DeltaR(*e) " << j->DeltaR(*e) << endl;
-//     }
-//   }
-
-//   cout << "truth jets: " << endl;
-//   for (int i=0; i<truthJets.size(); i++){
-//     const TruthJet* j = truthJets.at(i);
-//     cout << "pt " << j->Pt() << " eta " << j->Eta() << endl;
-//   }
-
-  // Do we really need overlap removal at the truth level
-  // I'm not 100% sold on this, so I skip at the moment
-
-  // Do SFOS removal for Mll < 20 GeV
   removeSFOSPair(truthElectrons);
   removeSFOSPair(truthMuons    );
-//   for (int i=0; i<truthMuons.size(); i++){
-//     const TruthParticle* m = truthMuons.at(i);
-//     cout << "m->Pt()= " << m->Pt() << endl;
-//     for (int k=0; k<truthMuons.size(); k++){
-//       if (i==k) continue;
-//       const TruthParticle* m1 = truthMuons.at(k);
-//       cout << "m1->Pt()= " << m1->Pt() << endl;
-//       cout << "m1->DeltaR(*m) " << m1->DeltaR(*m) << " q*q " << m->charge*m1->charge << " mll " << SusyNtAna::Mll(m,m1) <<  endl;
-//     }
-//   }
-//   removeSFOSPair(truthTaus     );
 
   TruthParticleVector signal_truthElectrons = truthElectrons; //leptons: same as baseline selection.
   TruthParticleVector signal_truthMuons = truthMuons;
@@ -227,39 +152,9 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
 
   calcJet_variables(truthMet_TLV, signal_truthJets);
 
-//   cout << "signal_L20truthJets: " << endl;
-//   for (int i=0; i<signal_L20truthJets.size(); i++){
-//     const TruthJet* j = signal_L20truthJets.at(i);
-//     cout << "pt " << j->Pt() << " eta " << j->Eta() << endl;
-//   }
-//
-//   cout << "signal_F30truthJets: " << endl;
-//   for (int i=0; i<signal_F30truthJets.size(); i++){
-//     const TruthJet* j = signal_F30truthJets.at(i);
-//     cout << "pt " << j->Pt() << " eta " << j->Eta() << endl;
-//   }
-//
-//   cout << "signal_B20truthJets: " << endl;
-//   for (int i=0; i<signal_B20truthJets.size(); i++){
-//     const TruthJet* j = signal_B20truthJets.at(i);
-//     cout << "pt " << j->Pt() << " eta " << j->Eta() << endl;
-//   }
-//
-//   cout << "signal_truthJets: " << endl;
-//   for (int i=0; i<signal_truthJets.size(); i++){
-//     const TruthJet* j = signal_truthJets.at(i);
-//     cout << "pt " << j->Pt() << " eta " << j->Eta() << endl;
-//   }
-
-
-
-
-
   int flag = nt.evt()->cutFlags[SysSetting];
-  float weight_ALL = 1.;//(nt.evt()->isMC) ? SusyNtTools::getEventWeight(nt.evt(), LUMI_A_L, true, &m_sumwMap, false, true, SysSettingPileup) : 1.;
-//   //   if(mcid>= 177501 && mcid <= 177527) 	weight_ALL = weight_ALL/nt.evt()->xsec * m_susyXsec->xsectTimesEff(mcid);
-//
-    float weight_ALL_EE = weight_ALL;
+  float weight_ALL = 1.;
+  float weight_ALL_EE = weight_ALL;
     float weight_ALL_MM = weight_ALL;
     float weight_ALL_EM = weight_ALL;
 //
@@ -604,34 +499,34 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
 
 /*--------------------------------------------------------------------------------*/
 
-bool TSelector_SusyNtuple_Truth::CheckRealLeptons(const ElectronVector& signal_electrons, MuonVector& signal_muons){
+// bool TSelector_SusyNtuple_Truth::CheckRealLeptons(const ElectronVector& signal_electrons, MuonVector& signal_muons){
 
-  for(uint i=0; i<signal_electrons.size(); i++){
-    Electron* signal_electron = signal_electrons.at(i);
-    if(signal_electron->isChargeFlip) return false;
-    if(signal_electron->truthType != RecoTruthMatch::PROMPT) return false;
-  }
+//   for(uint i=0; i<signal_electrons.size(); i++){
+//     Electron* signal_electron = signal_electrons.at(i);
+//     if(signal_electron->isChargeFlip) return false;
+//     if(signal_electron->truthType != RecoTruthMatch::PROMPT) return false;
+//   }
 
-    for(uint i=0; i<signal_muons.size(); i++){
-      Muon* signal_muon = signal_muons.at(i);
-      if(signal_muon->truthType != RecoTruthMatch::PROMPT) return false;
-  }
+//     for(uint i=0; i<signal_muons.size(); i++){
+//       Muon* signal_muon = signal_muons.at(i);
+//       if(signal_muon->truthType != RecoTruthMatch::PROMPT) return false;
+//   }
 
-  return true;
+//   return true;
 
-}
+// }
 
 /*--------------------------------------------------------------------------------*/
-bool TSelector_SusyNtuple_Truth::CheckChargeFlipElectrons(const ElectronVector& signal_electrons){
+// bool TSelector_SusyNtuple_Truth::CheckChargeFlipElectrons(const ElectronVector& signal_electrons){
 
-  for(uint i=0; i<signal_electrons.size(); i++){
-Electron* signal_electron = signal_electrons.at(i);
-if(signal_electron->isChargeFlip) return false;
-// check if signal electron has no charge flip
-  }
-  return true;
+//   for(uint i=0; i<signal_electrons.size(); i++){
+// Electron* signal_electron = signal_electrons.at(i);
+// if(signal_electron->isChargeFlip) return false;
+// // check if signal electron has no charge flip
+//   }
+//   return true;
 
-}
+// }
 /*--------------------------------------------------------------------------------*/
 float TSelector_SusyNtuple_Truth::getBTagWeight(const Event* evt, BTagSys SysSettingBTag)
 {
@@ -857,113 +752,14 @@ float TSelector_SusyNtuple_Truth::calcMZTauTau_coll(const TLorentzVector &signal
 }
 /*--------------------------------------------------------------------------------*/
 float TSelector_SusyNtuple_Truth::calcMZTauTau_mmc(TLorentzVector lep1, TLorentzVector lep2, int tau0_decay_type, int tau1_decay_type){
- //initialize missing mass calculator MMC for identification of Z->tau tau events https://svnweb.cern.ch/trac/atlasusr/browser/mflechl/code/htautau/mmc/tags/mmc-00-01-10/README
-
-// float sum_et = 0.;
-// sum_et += m_met->refEle_sumet;
-// sum_et += m_met->refGamma_sumet;
-// //taus?
-// sum_et += m_met->refJet_sumet;
-// sum_et += m_met->softTerm_sumet;
-// sum_et += m_met->refMuo_sumet;
-//
-// TLorentzVector vec1, vec2;
-// vec1 = lep1; //ELECTRON
-// vec2 = lep2; // MUON
-//
-// float met_resolution = 0.;
-// // cout << "nSignalJets= " << nSignalJets << endl;
-// if(nt.evt()->isMC){
-// if(nSignalJets==0){
-// met_resolution = 4.447 + 0.505 * sqrt(sum_et);
-// }
-// if(nSignalJets==1){
-// met_resolution = 5.000 + 0.500 * sqrt(sum_et);
-// }
-// if(nSignalJets==2){
-// met_resolution = 4.635 + 0.514 * sqrt(sum_et);
-// }
-// if(nSignalJets>=3){
-// met_resolution = 4.528 + 0.513 * sqrt(sum_et);
-// }
-// }
-//
-// if(!nt.evt()->isMC){
-// if(nSignalJets==0){
-// met_resolution = 4.314 + 0.498 * sqrt(sum_et);
-// }
-// if(nSignalJets==1){
-// met_resolution = 4.700 + 0.509 * sqrt(sum_et);
-// }
-// if(nSignalJets==2){
-// met_resolution = 4.539 + 0.519 * sqrt(sum_et);
-// }
-// if(nSignalJets>=3){
-// met_resolution = 3.897 + 0.540 * sqrt(sum_et);
-// }
-// }
-// // mode:
-// // 11 - for ee final state
-// // 13 - for emu final state
-// // 31 - for mue final state
-// // 33 - for mumu final state
-//
-// int mode = 0;
-//
-// if(tau0_decay_type == 0 && tau1_decay_type == 0) mode = 11; //EE channel
-//
-// if(tau0_decay_type == 0 && tau1_decay_type == 1){ //EM channel
-// if(vec1.Pt() > vec2.Pt()) mode = 13; //EMU
-// if(vec1.Pt() < vec2.Pt()) mode = 31; //MUE
-// }
-// if(tau0_decay_type == 1 && tau1_decay_type == 1) mode = 33; //MM channel
-//
-// MMC_sumet.Clear();
-// // cout << "lep1.Pt()= " << lep1.Pt() << " lep2.Pt()= " << lep2.Pt() << " m_met->lv().Px()= " << m_met->lv().Px() << " m_met->lv().Py()= " << m_met->lv().Py() << " met_resolution= " << met_resolution << " mode= " << mode;
-// MMC_sumet.Scan6dAnal(vec1, vec2, m_met->lv().Px(), m_met->lv().Py(), met_resolution, mode);
-//
-// // MMC_sumet.Set_Alpha(1.);
-// // MMC_sumet.Scan6d(vec1, vec2, m_met->lv().Px(), m_met->lv().Py(), met_resolution, mode);
-//
-// float met_ex = MMC_sumet.GetCorrMEX();
-// float met_ey = MMC_sumet.GetCorrMEY();
-// // cout << " corrected met_ex= " << met_ex << " met_ey= " << met_ey << endl;
-//
-// // if (isnan(met_ex) || isnan(met_ey) ){
-// // met_ex = m_met->lv().Px();
-// // met_ey = m_met->lv().Py();
-// // cout << "shift corrected met to old values because NAN" << endl;
-// // }
-// MMC_sumet.Scan4dAnal(vec1, vec2, met_ex, met_ey, mode);
-// //validate: which method is best to get mass value?
-// float mZTauTau_mmc = -1.;
-// mZTauTau_mmc = MMC_sumet.GetMZ_peak();
-// // cout << "MMC_sumet.GetMZ_mean()= " << MMC_sumet.GetMZ_mean() << " MMC_sumet.GetMZ_maxprob()= " << MMC_sumet.GetMZ_maxprob() << endl;
-// // cout << "mZTauTau_mmc= " << mZTauTau_mmc << endl;
-// return mZTauTau_mmc;
   return 111.;
 
 }
-void TSelector_SusyNtuple_Truth::fillHistos_EE(int cutnumber, float weight){
-  cutflow_EE->Fill(cutnumber,1.0);
-  cutflow_EE_ALL->Fill(cutnumber, weight);
-}
-/*--------------------------------------------------------------------------------*/
-void TSelector_SusyNtuple_Truth::fillHistos_MM(int cutnumber, float weight){
-  cutflow_MM->Fill(cutnumber,1.0);
-  cutflow_MM_ALL->Fill(cutnumber, weight);
-}
-/*--------------------------------------------------------------------------------*/
-void TSelector_SusyNtuple_Truth::fillHistos_EM(int cutnumber, float weight){
-  cutflow_EM->Fill(cutnumber,1.0);
-  cutflow_EM_ALL->Fill(cutnumber, weight);
-}
 
 /*--------------------------------------------------------------------------------*/
-float TSelector_SusyNtuple_Truth::calcSumMv1(const JetVector &signalJets){
-
+float TSelector_SusyNtuple_Truth::calcSumMv1(const JetVector &signalJets)
+{
   //with or without leptons?
-
   float sumMv1 = 0.;
   for(uint j=0; j<signalJets.size(); ++j){
 Jet* jet = signalJets.at(j);
@@ -971,33 +767,6 @@ sumMv1 += jet->mv1;
   }
   return sumMv1;
 }
-/*--------------------------------------------------------------------------------*/
-float TSelector_SusyNtuple_Truth::getFakeWeight(const LeptonVector &baseLeps, susy::fake::Region region, float metRel, SusyMatrixMethod::SYSTEMATIC sys)
-{
-
-//   if(baseLeps.size() != 2) return 0.0;
-//
-//   uint nVtx = nt.evt()->nVtx;
-//   bool isMC = nt.evt()->isMC;
-//
-//   float weight = m_matrix->getTotalFake( isSignalLepton(baseLeps[0],m_baseElectrons, m_baseMuons,nVtx,isMC),
-//                                          baseLeps[0]->isEle(),
-//                                          baseLeps[0]->Pt() * 1000.,
-//                                          baseLeps[0]->Eta(),
-//                                          isSignalLepton(baseLeps[1],m_baseElectrons, m_baseMuons,nVtx,isMC),
-//                                          baseLeps[1]->isEle(),
-//                                          baseLeps[1]->Pt() * 1000.,
-//                                          baseLeps[1]->Eta(),
-//                                          region,
-//                                          metRel * 1000.,
-//                                          sys);
-//
-//   return weight;
-return 0.;
-
-}
-
-
 /*--------------------------------------------------------------------------------*/
 float TSelector_SusyNtuple_Truth::calc_D0(bool unbiased, const Lepton* lep)
 {
@@ -1015,86 +784,8 @@ float TSelector_SusyNtuple_Truth::calc_D0(bool unbiased, const Lepton* lep)
 /*--------------------------------------------------------------------------------*/
 bool TSelector_SusyNtuple_Truth::compareElecMomentum (Electron* e0, Electron* e1){ return (e0->Pt() > e1->Pt()); }
 
-// /*--------------------------------------------------------------------------------*/
-// ElectronVector TSelector_SusyNtuple_Truth::getSoftElectrons(SusyNtObject* susyNt, SusyNtSys sys)
-// {
-//
-// //    electrons which are too soft: pT < 10 GeV [susyNt->eleco() but pT < 10 GeV]
-//   ElectronVector soft_electrons;
-//   for(uint ie=0; ie<susyNt->ele()->size(); ie++){
-//     Electron* soft_elec = &susyNt->ele()->at(ie);
-//     soft_elec->setState(sys);
-//     if(soft_elec->Pt() < 10.) soft_electrons.push_back(soft_elec);
-//   }
-//   std::sort(soft_electrons.begin(), soft_electrons.end(), compareElecMomentum);
-//
-//   return soft_electrons;
-// }
-
-/*--------------------------------------------------------------------------------*/
-// ElectronVector TSelector_SusyNtuple_Truth::getOverlapElectrons(SusyNtObject* susyNt, SusyNtSys sys)
-// {
-// //overlapElectrons: electrons which are removed in OR [getPreElectrons() but not m_baseElectrons (= no signal elec)]
-//   ElectronVector overlap_electrons;
-//
-//   ElectronVector PreElectrons = getPreElectrons(&nt, SysSetting);
-//
-//   for(uint ie=0; ie<PreElectrons.size(); ie++){
-//     Electron* pre_el = PreElectrons.at(ie);
-//     pre_el->setState(sys);
-//     bool noBaseEl = true;
-//     for(uint ie2=0; ie2<m_baseElectrons.size(); ie2++){
-//       Electron* base_el = m_baseElectrons.at(ie2);
-//       base_el->setState(sys);
-//       if(base_el->DeltaR(*pre_el) < 0.0001) noBaseEl = false;
-//     }
-//     if(noBaseEl) overlap_electrons.push_back(pre_el);
-//   }
-//   std::sort(overlap_electrons.begin(), overlap_electrons.end(), compareElecMomentum);
-//
-//   return overlap_electrons;
-// }
 /*--------------------------------------------------------------------------------*/
 bool TSelector_SusyNtuple_Truth::compareMuonMomentum (Muon* mu0, Muon* mu1){ return (mu0->Pt() > mu1->Pt()); }
-/*--------------------------------------------------------------------------------*/
-// MuonVector TSelector_SusyNtuple_Truth::getSoftMuons(SusyNtObject* susyNt, SusyNtSys SysSetting)
-// {
-// //    muons which are too soft: pT < 10 GeV [susyNt->muo() but pT < 10 GeV]
-//   MuonVector soft_muons;
-//   for(uint im=0; im<susyNt->muo()->size(); im++){
-//     Muon* soft_mu = &susyNt->muo()->at(im);
-//     soft_mu->setState(SysSetting);
-//     if(soft_mu->Pt() < 10.) soft_muons.push_back(soft_mu);
-//   }
-//   std::sort(soft_muons.begin(), soft_muons.end(), compareMuonMomentum);
-//
-//   return soft_muons;
-// }
-
-/*--------------------------------------------------------------------------------*/
-// MuonVector TSelector_SusyNtuple_Truth::getOverlapMuons(SusyNtObject* susyNt, SusyNtSys SysSetting)
-// {
-// //overlapMuons: muons which are removed in OR [getPreMuons() but not m_baseMuons (= no signal muon)]
-//   MuonVector overlap_muons;
-//
-//   MuonVector PreMuons = getPreMuons(&nt, SysSetting);
-//
-//   for(uint im=0; im<PreMuons.size(); im++){
-//     Muon* pre_mu = PreMuons.at(im);
-//     pre_mu->setState(SysSetting);
-//     bool noBaseMu = true;
-//     for(uint im2=0; im2<m_baseMuons.size(); im2++){
-//       Muon* base_mu = m_baseMuons.at(im2);
-//       base_mu->setState(SysSetting);
-//       if(base_mu->DeltaR(*pre_mu) < 0.0001) noBaseMu = false;
-//     }
-//     if(noBaseMu) overlap_muons.push_back(pre_mu);
-//   }
-//   std::sort(overlap_muons.begin(), overlap_muons.end(), compareMuonMomentum);
-//
-//   return overlap_muons;
-// }
-
 /*--------------------------------------------------------------------------------*/
 bool TSelector_SusyNtuple_Truth::isCMSJet(const Susy::Jet* jet)
 {
@@ -1165,54 +856,96 @@ vector<TLorentzVector> TSelector_SusyNtuple_Truth::overlapRemoval(vector<TLorent
 
 bool TSelector_SusyNtuple_Truth::doEventCleaning_andFillHistos(TruthJetVector baseJets, const TruthMet* met, TruthParticleVector baseMuons, TruthParticleVector baseElectrons, int flag, float weight_ALL_EE, float weight_ALL_MM, float weight_ALL_EM, SusyNtSys SysSetting, bool n0150BugFix)
 {
-  float cutnumber = 0.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM); // all events in the sample
+  float cutnumber = 0.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM); // all events in the sample
 
   if( !(flag & ECut_GRL) ) return false;
-  cutnumber = 1.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM); //grl Cut
+  cutnumber = 1.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM); //grl Cut
 
   if( !(ECut_TileTrip & flag) ) return false;
-  cutnumber = 2.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM); //TileTripReader
+  cutnumber = 2.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM); //TileTripReader
 
 // if ( !(flag & ECut_TTC)) return false;
-  cutnumber = 3.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM);//IncompleteEvents Veto
+  cutnumber = 3.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM);//IncompleteEvents Veto
 
   if(!(ECut_LarErr & flag) || !(ECut_TileErr & flag)) return false;
-  cutnumber = 4.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM); //LAr/TileError
+  cutnumber = 4.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM); //LAr/TileError
 
 // if( !(flag & ECut_HotSpot)) return false; //remove event where a jet points into hot TileCal module
-  cutnumber = 5.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM); //TileCalHotSpot
+  cutnumber = 5.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM); //TileCalHotSpot
 
   // remove event with VeryLooseBad jets with pT>20 GeV. No eta cut. Only consider jets which are not overlapping with electrons or taus:
 //   if(SusyNtAna::hasBadJet(baseJets))return kFALSE;
-  cutnumber = 6.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM);//BadJets
+  cutnumber = 6.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM);//BadJets
 
   //on top of smart veto, veto event with >=1 jets before electron-jet overlap removal with pT>40 GeV, BCH_CORR_JET > 0.05, DeltaPhi(met,jet)<0.3 (Anyes)
 //   TruthJetVector prejets = getPreTruthJets(&nt);
 //   if(!passDeadRegions(prejets, met, nt.evt()->run, nt.evt()->isMC)/* || !(flag & ECut_SmartVeto)*/) return false; // SusyNtTools: passDeadRegions(...)
-  cutnumber = 7.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM); //CaloJets
+  cutnumber = 7.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM); //CaloJets
 
 //   if( !(flag & ECut_GoodVtx)) return false;
-  cutnumber = 8.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM);//PrimaryVertex
+  cutnumber = 8.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM);//PrimaryVertex
 
 //   MuonVector preMuons = SusyNtAna::getPreMuons(&nt, SysSetting, n0150BugFix);
 //   if( SusyNtAna::hasBadMuon(preMuons)) return false;
-  cutnumber = 9.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM);//BadMuons
+  cutnumber = 9.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM);//BadMuons
 
 //   if(hasCosmicMuon(baseMuons)) return false; // !(flag & ECut_Cosmic) - no longer guarantee the event flags that are stored :-(
 //   preMuons.clear();
-  cutnumber = 10.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM);//Cosmic Muons
+  cutnumber = 10.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM);//Cosmic Muons
 
 
   // Sherpa WW fix, remove radiative b-quark processes that overlap with single top: already done upstream in SusyCommon SusyNtMaker
 
   if(nt.evt()->hfor == 4) return false; //remove events where same heavy flavor final states arise in multiple samples when combining ALPGEN samples
-  cutnumber = 11.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM);//hfor veto
+  cutnumber = 11.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM);//hfor veto
 
   if(!(baseMuons.size() >= 2 || baseElectrons.size() >= 2 || (baseElectrons.size()+baseMuons.size()) >= 2)) return false;
-  cutnumber = 12.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM);//at least 2 base leptons
+  cutnumber = 12.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM);//at least 2 base leptons
 
   if(!(baseMuons.size() == 2 || baseElectrons.size() == 2 || (baseElectrons.size()+baseMuons.size()) == 2)) return false;
-  cutnumber = 13.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM);//exactly 2 base leptons
+  cutnumber = 13.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM);//exactly 2 base leptons
 
 
 // if(!(m_baseElectrons.size()==2 || baseMuons.size()==2 || (m_baseElectrons.size()+baseMuons.size())==2)) return false; //only count leptons where no Mll < 20 GeV. Mll < 12 GeV veto ALREADY DONE FOR SELECTING BASELINE LEPTONS in performOverlapRemoval()
@@ -1222,8 +955,12 @@ bool TSelector_SusyNtuple_Truth::doEventCleaning_andFillHistos(TruthJetVector ba
   // Any lepton pairs are required to have an invariant mass, m``, above 20 GeV such that to remove low-mass dilepton resonances
   if(baseMuons.size() == 2 && SusyNtAna::Mll(baseMuons[0], baseMuons[1]) < 20 )return false;
   if(baseElectrons.size() == 2 && SusyNtAna::Mll(baseElectrons[0], baseElectrons[1]) < 20 )return false;
-  if((baseElectrons.size() ==1 && baseMuons.size() == 1) && SusyNtAna::Mll(baseElectrons[0], baseMuons[0]) < 20 )return false;
-  cutnumber = 14.; fillHistos_EE(cutnumber, weight_ALL_EE); fillHistos_MM(cutnumber, weight_ALL_MM); fillHistos_EM(cutnumber, weight_ALL_EM);//Mll
+  if((baseElectrons.size() ==1 && baseMuons.size() == 1) && 
+     SusyNtAna::Mll(baseElectrons[0], baseMuons[0]) < 20 )return false;
+  cutnumber = 14.;
+  fillHistos_EE(cutnumber, weight_ALL_EE);
+  fillHistos_MM(cutnumber, weight_ALL_MM);
+  fillHistos_EM(cutnumber, weight_ALL_EM);//Mll
 
   return true;
 }
@@ -1722,79 +1459,6 @@ void TSelector_SusyNtuple_Truth::SlaveTerminate()
     out.close();
   }
 
-
-
-
-    TString outputfile;
-
-    if(sample_identifier == 169471)outputfile="histos_ZN_WW_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 126988)outputfile="histos_ZN_WWPlusJets_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 129477)outputfile="histos_ZN_ZV_n0150_Truth_BJetDR04_02_06_14";
-
-    if(sample_identifier == 116600)outputfile="histos_ZN_ZZ_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 108346)outputfile="histos_ZN_ttbarWtop_n0150_Truth_BJetDR04_02_06_14";
-
-//     if(sample_identifier == 110805) outputfile="histos_ZN_ZPlusJetsOLD_n0150_split1_Truth_BJetDR04_02_06_14";
-//     if(sample_identifier == 117671) outputfile="histos_ZN_ZPlusJetsOLD_n0150_split2_Truth_BJetDR04_02_06_14";
-//     if(sample_identifier == 173041)outputfile="histos_ZN_ZPlusJetsOLD_n0150_split3_Truth_BJetDR04_02_06_14";
-//     if(sample_identifier == 173045)outputfile="histos_ZN_ZPlusJetsOLD_n0150_split4_Truth_BJetDR04_02_06_14";
-
-    if(sample_identifier == 147105)outputfile="histos_ZN_ZPlusJetsNEW_n0150_split1_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 147123)outputfile="histos_ZN_ZPlusJetsNEW_n0150_split2_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 147771)outputfile="histos_ZN_ZPlusJetsNEW_n0150_split3_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 173045)outputfile="histos_ZN_ZPlusJetsNEW_n0150_split4_Truth_BJetDR04_02_06_14";
-
-
-
-    if(sample_identifier == 160155)outputfile="histos_ZN_Higgs_n0150_Truth_BJetDR04_02_06_14";
-
-    if(sample_identifier == 157816)outputfile="histos_ZN_VVtotautauqq_n0150_Truth_BJetDR04_02_06_14";
-
-    if(sample_identifier == 126893)outputfile="histos_cutflow_126893_TSelector_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 176576)outputfile="histos_cutflow_176576_TSelector_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177501)outputfile="histos_ZN_177501_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177502)outputfile="histos_ZN_177502_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177503)outputfile="histos_ZN_177503_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177504)outputfile="histos_ZN_177504_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177505)outputfile="histos_ZN_177505_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177506)outputfile="histos_ZN_177506_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177507)outputfile="histos_ZN_177507_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177508)outputfile="histos_ZN_177508_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177509)outputfile="histos_ZN_177509_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177510)outputfile="histos_ZN_177510_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177511)outputfile="histos_ZN_177511_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177512)outputfile="histos_ZN_177512_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177513)outputfile="histos_ZN_177513_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177514)outputfile="histos_ZN_177514_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177515)outputfile="histos_ZN_177515_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177516)outputfile="histos_ZN_177516_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177517)outputfile="histos_ZN_177517_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177518)outputfile="histos_ZN_177518_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177519)outputfile="histos_ZN_177519_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177520)outputfile="histos_ZN_177520_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177521)outputfile="histos_ZN_177521_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177522)outputfile="histos_ZN_177522_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177523)outputfile="histos_ZN_177523_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177524)outputfile="histos_ZN_177524_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177525)outputfile="histos_ZN_177525_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177526)outputfile="histos_ZN_177526_n0150_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 177527)outputfile="histos_ZN_177527_n0150_Truth_BJetDR04_02_06_14";
-
-    if(sample_identifier == 10001) outputfile="histos_fake_Egamma_n0150_1_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 10002) outputfile="histos_fake_Egamma_n0150_2_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 10003) outputfile="histos_fake_Egamma_n0150_3_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 10004) outputfile="histos_fake_Egamma_n0150_4_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 10005) outputfile="histos_fake_Egamma_n0150_5_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 10006) outputfile="histos_fake_Egamma_n0150_6_Truth_BJetDR04_02_06_14";
-
-    if(sample_identifier == 20001) outputfile="histos_fake_Muons_n0150_1_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 20002) outputfile="histos_fake_Muons_n0150_2_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 20003) outputfile="histos_fake_Muons_n0150_3_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 20004) outputfile="histos_fake_Muons_n0150_4_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 20005) outputfile="histos_fake_Muons_n0150_5_Truth_BJetDR04_02_06_14";
-    if(sample_identifier == 20006) outputfile="histos_fake_Muons_n0150_6_Truth_BJetDR04_02_06_14";
-//     outputfile="histos_cutflow_fake_Egamma_periodA_Truth_BJetDR04_02_06_14";
-
 // if(sample_identifier>=176574 && sample_identifier <= 176640){
 // char buffer[10];
 // ostrstream Str(buffer, isys);
@@ -1806,7 +1470,7 @@ void TSelector_SusyNtuple_Truth::SlaveTerminate()
 //     system("pause");
 string str;
 // string str1 = "histos_ZN_tauveto_signal_";
-str.append(outputfile);
+//str.append(outputfile);
 // str.append(buffer);
 string str2 = ".root";
 str.append(str2);
@@ -1835,3 +1499,448 @@ void TSelector_SusyNtuple_Truth::Terminate()
 //   closeTupleMaker();
 
 }
+
+void TSelector_SusyNtuple_Truth::defineHistos(){
+
+  
+}
+  /*--------------------------------------------------------------------------------*/ 
+ void TSelector_SusyNtuple_Truth::defineHistos_sysUncert(){ 
+
+}
+
+
+void TSelector_SusyNtuple_Truth::writeHistos(){
+
+  
+}
+
+void TSelector_SusyNtuple_Truth::writeHistos_sysUncert(){
+
+}
+
+void TSelector_SusyNtuple_Truth::calcJet_variables(TLorentzVector met_TLV, TruthJetVector signalJets){
+  
+  TLorentzVector signalJet0_TLV;
+  TLorentzVector signalJet1_TLV;
+  nSignalJets = signalJets.size();
+  
+  if(nSignalJets>0){
+    signalJet0_TLV.SetPtEtaPhiE(signalJets.at(0)->Pt(), signalJets.at(0)->eta ,signalJets.at(0)->phi, signalJets.at(0)
+    ->Pt()*cosh(signalJets.at(0)->eta));
+    signalJet0_TLV.SetPtEtaPhiM(signalJets.at(0)->Pt(), signalJets.at(0)->eta ,signalJets.at(0)->phi, signalJets.at(0)
+    ->m);
+  }
+  if(nSignalJets>1){
+    signalJet1_TLV.SetPtEtaPhiE(signalJets.at(1)->Pt(), signalJets.at(1)->eta ,signalJets.at(1)->phi, signalJets.at(1)->Pt()*cosh(signalJets.at(1)->eta));
+    signalJet1_TLV.SetPtEtaPhiM(signalJets.at(1)->Pt(), signalJets.at(1)->eta ,signalJets.at(1)->phi, signalJets.at(1)->m);
+  }
+  
+  
+  
+  if(nSignalJets>0){
+    pTj0 = signalJet0_TLV.Pt();
+    pTj1 = (nSignalJets>1) ? signalJet1_TLV.Pt() : 0.;
+    eta_j0 = signalJet0_TLV.Eta();
+    eta_j1 = (nSignalJets>1) ? signalJet1_TLV.Eta() : 0.;
+    mjj = (nSignalJets>1) ? (signalJet0_TLV + signalJet1_TLV).M() : signalJet0_TLV.M();
+    DeltaPhijj = (nSignalJets>1) ? fabs(signalJet0_TLV.DeltaPhi(signalJet1_TLV)) : 0.;
+    pTjj = (nSignalJets>1) ? (signalJet0_TLV + signalJet1_TLV).Pt() : signalJet0_TLV.Pt();
+    DeltaPhiMETj0 = fabs(signalJet0_TLV.DeltaPhi(met_TLV));
+    DeltaPhiMETj1 = (nSignalJets>1) ? fabs(signalJet1_TLV.DeltaPhi(met_TLV)) : 0.;
+    DeltaRjj = (nSignalJets>1) ?  fabs(signalJet0_TLV.DeltaR(signalJet1_TLV)) : 0.;
+    DeltaEtajj = (nSignalJets>1) ? fabs(signalJet0_TLV.Eta() - signalJet1_TLV.Eta()) : 0.;
+    DeltaYjj = (nSignalJets>1) ? fabs(signalJet0_TLV.Rapidity() - signalJet1_TLV.Rapidity()) : 0.;
+    DeltaPhiMETjj = (nSignalJets>1) ? fabs((signalJet0_TLV+ signalJet1_TLV).DeltaPhi(met_TLV)) : fabs(signalJet0_TLV.DeltaPhi(met_TLV));
+//     NBJets = SusyNtAna::numberOfCBJets(signalJets);
+//     NCJets = SusyNtAna::numberOfCLJets(signalJets);
+//     NFJets = SusyNtAna::numberOfFJets(signalJets);
+//     meff = calcMeff(met_TLV, signalJets);
+  }
+    
+}
+void TSelector_SusyNtuple_Truth::calc_EE_variables(TruthParticle* el0, TruthParticle* el1, TLorentzVector el0_TLV, TLorentzVector el1_TLV, TruthJetVector signalJets, TLorentzVector signalJet0_TLV, TLorentzVector signalJet1_TLV, TLorentzVector met_TLV){
+  
+//   pTl0_EE = el0_TLV.Pt();
+//   pTl1_EE = el1_TLV.Pt();
+//   etal0_EE = el0_TLV.Eta();
+//   etal1_EE = el1_TLV.Eta();
+//   DeltaR_EE = fabs(el0_TLV.DeltaR(el1_TLV));
+//   pTll_EE = (el0_TLV + el1_TLV).Pt();
+//   Mll_EE = Mll(el0, el1);
+//   METrel_EE = recalcMetRel(met_TLV, el0_TLV, el1_TLV, m_signalJets2Lep, useForwardJets);
+//   MET_EE = met_TLV.Pt();
+  HT_EE = calcHT(el0_TLV, el1_TLV, met_TLV, signalJets);
+//   mTWW_EE = calcMt((el0_TLV + el1_TLV), met_TLV);
+//   mT_EE = calcMt((el0_TLV+el1_TLV), met_TLV);
+//   mTmin_EE = (calcMt(el0_TLV, met_TLV) > calcMt(el1_TLV, met_TLV)) ? calcMt(el1_TLV, met_TLV) : calcMt(el0_TLV, met_TLV);
+  mTmax_EE = (calcMt(el0_TLV, met_TLV) < calcMt(el1_TLV, met_TLV)) ? calcMt(el1_TLV, met_TLV) : calcMt(el0_TLV, met_TLV);
+//   mTl0MET_EE = calcMt(el0_TLV, met_TLV);
+//   mTl1MET_EE = calcMt(el1_TLV, met_TLV);
+//   mMET_EE = (el0_TLV + el1_TLV + met_TLV).M();
+//   DeltaPhi_EE = fabs(el0_TLV.DeltaPhi(el1_TLV));
+//   DeltaPhiMETl0_EE = fabs(el0_TLV.DeltaPhi(met_TLV));
+//   DeltaPhiMETl1_EE = fabs(el1_TLV.DeltaPhi(met_TLV));
+//   DeltaPhiMETll_EE = fabs((el0_TLV + el1_TLV).DeltaPhi(met_TLV));
+  
+  Mljj_EE = -1.;
+  Mlj_EE = -1.;
+  if(nSignalJets>1){
+    //find dijet axis:
+    double DeltaRDijetEl0 = el0_TLV.DeltaR(signalJet0_TLV + signalJet1_TLV); //sqrt(pow(fabs(etaDijetAxis - el0_TLV.Eta()),2) + pow(fabs(phiDijetAxis - el0_TLV.Phi()),2));
+    double DeltaRDijetEl1 = el1_TLV.DeltaR(signalJet0_TLV + signalJet1_TLV); //sqrt(pow(fabs(etaDijetAxis - el1_TLV.Eta()),2) + pow(fabs(phiDijetAxis - el1_TLV.Phi()),2));
+    TLorentzVector closestElecDijetAxis_TLV = (DeltaRDijetEl0 > DeltaRDijetEl1) ? el1_TLV : el0_TLV;
+    Mljj_EE = (signalJet0_TLV + signalJet1_TLV + closestElecDijetAxis_TLV).M();
+  }
+  if(signalJets.size()>0){
+    //find dijet axis:
+    double DeltaRDijetEl0 = el0_TLV.DeltaR(signalJet0_TLV); //sqrt(pow(fabs(etaDijetAxis - el0_TLV.Eta()),2) + pow(fabs(phiDijetAxis - el0_TLV.Phi()),2));
+    double DeltaRDijetEl1 = el1_TLV.DeltaR(signalJet0_TLV); //sqrt(pow(fabs(etaDijetAxis - el1_TLV.Eta()),2) + pow(fabs(phiDijetAxis - el1_TLV.Phi()),2));
+    TLorentzVector closestElecDijetAxis_TLV = (DeltaRDijetEl0 > DeltaRDijetEl1) ? el1_TLV : el0_TLV;
+    Mlj_EE = (signalJet0_TLV + closestElecDijetAxis_TLV).M();
+  }
+  
+  
+  //get all electrons in SusyNtuple which have pT > 6 GeV
+  
+  TruthParticleVector Electrons_all_vec;
+  for(uint index=0; index<nt.tpr()->size(); ++index){
+    TruthParticle* particle = & nt.tpr()->at(index);
+    if(fabs(particle->pdgId) == 11) {
+      if( particle->Pt() < 6.0 || fabs(particle->Eta()) > 2.47 ) continue;
+      Electrons_all_vec.push_back(particle);
+    }
+  }
+
+  mllZcandImpact_EE = -1.;      
+  mTllZcandImpact_EE = -1.;
+  IClZcandImpact_EE = -5;
+  pTlZcandImpact_EE = -1.;
+  etalZcandImpact_EE = -1.;
+  ptcone30lZcandImpact_EE = -1.;
+  etcone30lZcandImpact_EE = -1.;
+  d0SiglZcandImpact_EE = -1.;
+  z0SinThetalZcandImpact_EE = -1.;
+  
+  ZcandLep_exists_EE = false;
+  ZcandLep_passesPT_EE = true;
+  ZcandLep_passesEta_EE = true;
+  ZcandLep_passesPTcone_EE = true;
+  ZcandLep_passesETcone_EE = true;
+  ZcandLep_passesD0_EE = true; 
+  ZcandLep_passesZ0_EE = true; 
+  ZcandLep_PassesMedium_EE = true;
+  ZcandLep_PassesTight_EE = true; 
+  ZcandLep_PassesORAndMllCut_EE = false;
+  ZcandLep_PassesPR_EE = true;
+  
+  
+  double DeltaMZ_lZcandImpact = 99999.;
+
+  TruthParticleVector Electron_ZcandImpact_vec;
+  TruthParticle* el_ZcandImpact_lost;
+ 
+  
+  
+    TruthParticle* closest_signal_el;
+    TLorentzVector closest_signal_el_TLV;
+    bool foundCandidate = false;
+    for(uint ie=0; ie<Electrons_all_vec.size(); ie++){
+      
+    
+      TruthParticle* el_ZcandImpact = Electrons_all_vec.at(ie);
+//       el_ZcandImpact->setState(SysSetting);
+
+      if((el_ZcandImpact->DeltaR(*el0) < 0.05) || (el_ZcandImpact->DeltaR(*el1) < 0.05)) continue; //no overlap w/ signal lepton
+      
+//       if(fabs(el_ZcandImpact->d0Sig(true)) >= ELECTRON_D0SIG_CUT_WH) continue;
+//       if(fabs(el_ZcandImpact->z0SinTheta(true)) >= ELECTRON_Z0_SINTHETA_CUT) continue;
+
+      TLorentzVector ZcandImpactElec_TLV;
+      ZcandImpactElec_TLV.SetPtEtaPhiE(el_ZcandImpact->Pt(), el_ZcandImpact->eta ,el_ZcandImpact->phi, el_ZcandImpact->Pt()*cosh(el_ZcandImpact->eta));
+      ZcandImpactElec_TLV.SetPtEtaPhiM(el_ZcandImpact->Pt(), el_ZcandImpact->eta ,el_ZcandImpact->phi, el_ZcandImpact->m);
+
+//       SFOS pair with leading or subleading signal electron closer to Zmass?
+      float DeltaMZ_l0_ZcandImpact = 999.;
+      if((fabs(MZ - SusyNtAna::Mll(el0, el_ZcandImpact)) < DeltaMZ_lZcandImpact) && ((el_ZcandImpact->charge * el0->charge)<0.)){
+	DeltaMZ_l0_ZcandImpact = fabs(MZ - SusyNtAna::Mll(el0, el_ZcandImpact));
+	foundCandidate = true;
+      }
+      float DeltaMZ_l1_ZcandImpact = 999.;
+      if((fabs(MZ - SusyNtAna::Mll(el1, el_ZcandImpact)) < DeltaMZ_lZcandImpact) && ((el_ZcandImpact->charge * el1->charge)<0.)){
+	DeltaMZ_l1_ZcandImpact = fabs(MZ - SusyNtAna::Mll(el1, el_ZcandImpact));
+	foundCandidate = true;
+      }
+      
+      if(foundCandidate && ( (fabs(MZ - SusyNtAna::Mll(el1, el_ZcandImpact)) < DeltaMZ_lZcandImpact) || (fabs(MZ - SusyNtAna::Mll(el0, el_ZcandImpact)) < DeltaMZ_lZcandImpact) )){
+
+	el_ZcandImpact_lost = el_ZcandImpact;
+	if(DeltaMZ_l0_ZcandImpact < DeltaMZ_l1_ZcandImpact){
+	  closest_signal_el = el0;
+	  closest_signal_el_TLV = el0_TLV;
+	}
+	else{
+	  closest_signal_el = el1;
+	  closest_signal_el_TLV = el1_TLV;
+	}
+	
+	mllZcandImpact_EE = SusyNtAna::Mll(closest_signal_el, el_ZcandImpact);      
+	DeltaMZ_lZcandImpact = fabs(MZ - SusyNtAna::Mll(closest_signal_el, el_ZcandImpact));
+	
+	Electron_ZcandImpact_vec.push_back(el_ZcandImpact);
+      }
+      
+    }
+}
+
+void TSelector_SusyNtuple_Truth::calc_MM_variables(TruthParticle* mu0, TruthParticle* mu1, TLorentzVector mu0_TLV, TLorentzVector mu1_TLV, TruthJetVector signalJets, TLorentzVector signalJet0_TLV, TLorentzVector signalJet1_TLV, TLorentzVector met_TLV){
+  HT_MM = calcHT(mu0_TLV, mu1_TLV, met_TLV, signalJets);
+  mTmax_MM = (calcMt(mu0_TLV, met_TLV) < calcMt(mu1_TLV, met_TLV)) ? calcMt(mu1_TLV, met_TLV) : calcMt(mu0_TLV, met_TLV);
+  Mljj_MM = -1.;
+  Mlj_MM = -1.;
+  if(nSignalJets>1){
+    double DeltaRDijetMu0 = mu0_TLV.DeltaR(signalJet0_TLV + signalJet1_TLV); //sqrt(pow(fabs(etaDijetAxis - mu0_TLV.Eta()),2) + pow(fabs(phiDijetAxis - mu0_TLV.Phi()),2));
+    double DeltaRDijetMu1 = mu1_TLV.DeltaR(signalJet0_TLV + signalJet1_TLV); //sqrt(pow(fabs(etaDijetAxis - mu1_TLV.Eta()),2) + pow(fabs(phiDijetAxis - mu1_TLV.Phi()),2));
+    TLorentzVector closestMuonDijetAxis_TLV = (DeltaRDijetMu0 > DeltaRDijetMu1) ? mu1_TLV : mu0_TLV;
+    Mljj_MM = (signalJet0_TLV + signalJet1_TLV + closestMuonDijetAxis_TLV).M();
+  }
+  if(nSignalJets>0){
+    double DeltaRDijetMu0 = mu0_TLV.DeltaR(signalJet0_TLV); //sqrt(pow(fabs(etaDijetAxis - mu0_TLV.Eta()),2) + pow(fabs(phiDijetAxis - mu0_TLV.Phi()),2));
+    double DeltaRDijetMu1 = mu1_TLV.DeltaR(signalJet0_TLV); //sqrt(pow(fabs(etaDijetAxis - mu1_TLV.Eta()),2) + pow(fabs(phiDijetAxis - mu1_TLV.Phi()),2));
+    TLorentzVector closestMuonDijetAxis_TLV = (DeltaRDijetMu0 > DeltaRDijetMu1) ? mu1_TLV : mu0_TLV;
+    Mlj_MM = (signalJet0_TLV + closestMuonDijetAxis_TLV).M();
+  }  
+  DeltaEtall_MM = fabs(mu0_TLV.Eta() - mu1_TLV.Eta());
+  
+  TruthParticleVector Muons_all_vec;
+  for(uint index=0; index<nt.tpr()->size(); ++index){
+    TruthParticle* particle = & nt.tpr()->at(index);
+    if(fabs(particle->pdgId) == 13) {
+      if( particle->Pt() < 6.0 || fabs(particle->Eta()) > 2.4 ) continue;
+      Muons_all_vec.push_back(particle);
+    }
+  }
+  
+  //ZcandImpact muons: all muons, only check for distance to signal muons
+  mllZcandImpact_MM = -1.;      
+  mTllZcandImpact_MM = -1.;
+  IClZcandImpact_MM = -5;
+  pTlZcandImpact_MM = -1.;
+  etalZcandImpact_MM = -1.;
+  ptcone30lZcandImpact_MM = -1.;
+  etcone30lZcandImpact_MM = -1.;
+  d0SiglZcandImpact_MM = -1.;
+  z0SinThetalZcandImpact_MM = -1.;
+  
+  ZcandLep_exists_MM = false;
+  ZcandLep_passesPT_MM = true;
+  ZcandLep_passesEta_MM = true;
+  ZcandLep_passesPTcone_MM = true;
+  ZcandLep_passesETcone_MM = true;
+  ZcandLep_passesD0_MM = true; 
+  ZcandLep_passesZ0_MM = true; 
+  ZcandLep_PassesMedium_MM = true;
+  ZcandLep_PassesTight_MM = true; 
+  ZcandLep_PassesORAndMllCut_MM = false; 
+  ZcandLep_PassesPR_MM = true; 
+  
+  
+  
+  double DeltaMZ_lZcandImpact = 99999.;  
+  TruthParticleVector Muon_ZcandImpact_vec;
+  TruthParticle* mu_ZcandImpact_lost;  
+  TruthParticle* closest_signal_mu;
+  TLorentzVector closest_signal_mu_TLV;
+  bool foundCandidate = false;
+  for(uint im=0; im<Muons_all_vec.size(); im++){
+
+    TruthParticle* mu_ZcandImpact = Muons_all_vec.at(im);
+    
+    if((mu_ZcandImpact->DeltaR(*mu0) < 0.05) || (mu_ZcandImpact->DeltaR(*mu1) < 0.05)) continue; //only check for separation of signal leptons
+
+    TLorentzVector ZcandImpact_TLV;
+    ZcandImpact_TLV.SetPtEtaPhiE(mu_ZcandImpact->Pt(), mu_ZcandImpact->eta ,mu_ZcandImpact->phi, mu_ZcandImpact->Pt()*cosh(mu_ZcandImpact->eta));
+    ZcandImpact_TLV.SetPtEtaPhiM(mu_ZcandImpact->Pt(), mu_ZcandImpact->eta ,mu_ZcandImpact->phi, mu_ZcandImpact->m);
+    
+    float DeltaMZ_l0_ZcandImpact = 999.;
+    if(((fabs(MZ - SusyNtAna::Mll(mu0, mu_ZcandImpact)) < DeltaMZ_lZcandImpact) && ((mu_ZcandImpact->charge * mu0->charge)<0.))){
+      DeltaMZ_l0_ZcandImpact = fabs(MZ - SusyNtAna::Mll(mu0, mu_ZcandImpact));
+      foundCandidate = true;
+    }
+    float DeltaMZ_l1_ZcandImpact = 999.;
+    if(((fabs(MZ - SusyNtAna::Mll(mu1, mu_ZcandImpact)) < DeltaMZ_lZcandImpact) && ((mu_ZcandImpact->charge * mu1->charge)<0.))){
+      DeltaMZ_l1_ZcandImpact = fabs(MZ - SusyNtAna::Mll(mu1, mu_ZcandImpact));
+      foundCandidate = true;
+    }
+    
+    if(foundCandidate && ((fabs(MZ - SusyNtAna::Mll(mu1, mu_ZcandImpact)) < DeltaMZ_lZcandImpact) || (fabs(MZ - SusyNtAna::Mll(mu0, mu_ZcandImpact)) < DeltaMZ_lZcandImpact))){
+
+      mu_ZcandImpact_lost = mu_ZcandImpact;
+      if(DeltaMZ_l0_ZcandImpact < DeltaMZ_l1_ZcandImpact){
+	closest_signal_mu = mu0;
+	closest_signal_mu_TLV = mu0_TLV;
+      }
+      else{
+	closest_signal_mu = mu1;
+	closest_signal_mu_TLV = mu1_TLV;
+      }
+      mllZcandImpact_MM = SusyNtAna::Mll(closest_signal_mu, mu_ZcandImpact);      
+
+      DeltaMZ_lZcandImpact = fabs(MZ - SusyNtAna::Mll(closest_signal_mu, mu_ZcandImpact));
+      
+      Muon_ZcandImpact_vec.push_back(mu_ZcandImpact);
+    }
+      
+  }
+
+    
+
+}
+
+void TSelector_SusyNtuple_Truth::calc_EM_variables(TruthParticle* mu, TruthParticle* el, TLorentzVector mu_TLV, TLorentzVector el_TLV, TruthJetVector signalJets, TLorentzVector signalJet0_TLV, TLorentzVector signalJet1_TLV, TLorentzVector met_TLV){
+  
+  HT_EM = calcHT(mu_TLV, el_TLV, met_TLV, signalJets);
+  mTmax_EM = (calcMt(mu_TLV, met_TLV) < calcMt(el_TLV, met_TLV)) ? calcMt(el_TLV, met_TLV) : calcMt(mu_TLV, met_TLV);
+  Mljj_EM = -1.;
+  Mlj_EM = -1.;
+  if(nSignalJets>1){
+    //find dijet axis:
+    double DeltaRDijetMu = mu_TLV.DeltaR(signalJet0_TLV + signalJet1_TLV); //sqrt(pow(fabs(etaDijetAxis - mu_TLV.Eta()),2) + pow(fabs(phiDijetAxis - mu_TLV.Phi()),2));
+    double DeltaRDijetEl = el_TLV.DeltaR(signalJet0_TLV + signalJet1_TLV); //sqrt(pow(fabs(etaDijetAxis - el_TLV.Eta()),2) + pow(fabs(phiDijetAxis - el_TLV.Phi()),2));
+    TLorentzVector closestLepDijetAxis_TLV = (DeltaRDijetMu > DeltaRDijetEl) ? el_TLV : mu_TLV;
+
+    Mljj_EM = (signalJet0_TLV + signalJet1_TLV + closestLepDijetAxis_TLV).M();
+
+  }
+  if(nSignalJets>0){
+    //find dijet axis:
+    double DeltaRDijetMu = mu_TLV.DeltaR(signalJet0_TLV); //sqrt(pow(fabs(etaDijetAxis - mu_TLV.Eta()),2) + pow(fabs(phiDijetAxis - mu_TLV.Phi()),2));
+    double DeltaRDijetEl = el_TLV.DeltaR(signalJet0_TLV); //sqrt(pow(fabs(etaDijetAxis - el_TLV.Eta()),2) + pow(fabs(phiDijetAxis - el_TLV.Phi()),2));
+    TLorentzVector closestLepDijetAxis_TLV = (DeltaRDijetMu > DeltaRDijetEl) ? el_TLV : mu_TLV;
+
+    Mlj_EM = (signalJet0_TLV + closestLepDijetAxis_TLV).M();
+
+  }
+  DeltaEtall_EM = fabs(mu_TLV.Eta() - el_TLV.Eta());  
+  
+  TruthParticleVector Muons_all_vec;
+  for(uint index=0; index<nt.tpr()->size(); ++index){
+    TruthParticle* particle = & nt.tpr()->at(index);
+    if(fabs(particle->pdgId) == 13) {
+      if( particle->Pt() < 6.0 || fabs(particle->Eta()) > 2.4 ) continue;
+      Muons_all_vec.push_back(particle);
+    }
+  }
+
+  TruthParticleVector Electrons_all_vec;
+  for(uint index=0; index<nt.tpr()->size(); ++index){
+    TruthParticle* particle = & nt.tpr()->at(index);
+    if(fabs(particle->pdgId) == 11) {
+      if( particle->Pt() < 6.0 || fabs(particle->Eta()) > 2.47 ) continue;
+      Electrons_all_vec.push_back(particle);
+    }
+  }
+  
+  
+  mllZcandImpact_mu_EM = -1.;      
+  mTllZcandImpact_mu_EM = -1.;
+  IClZcandImpact_mu_EM = -5;
+  pTlZcandImpact_mu_EM = -1.;
+  etalZcandImpact_mu_EM = -1.;
+  ptcone30lZcandImpact_mu_EM = -1.;
+  etcone30lZcandImpact_mu_EM = -1.;
+  d0SiglZcandImpact_mu_EM = -1.;
+  z0SinThetalZcandImpact_mu_EM = -1.;
+  
+  mllZcandImpact_el_EM = -1.;      
+  mTllZcandImpact_el_EM = -1.;
+  IClZcandImpact_el_EM = -5;
+  pTlZcandImpact_el_EM = -1.;
+  etalZcandImpact_el_EM = -1.;
+  ptcone30lZcandImpact_el_EM = -1.;
+  etcone30lZcandImpact_el_EM = -1.;
+  d0SiglZcandImpact_el_EM = -1.;
+  z0SinThetalZcandImpact_el_EM = -1.;
+  
+  
+  
+  
+  double DeltaMZ_lZcandImpact_mu = 99999.;  
+  double DeltaMZ_lZcandImpact_el = 99999.;  
+  TruthParticleVector Muon_ZcandImpact_vec;
+  TruthParticleVector Electron_ZcandImpact_vec;
+  TruthParticle* mu_ZcandImpact_lost; 
+  TruthParticle* el_ZcandImpact_lost; 
+
+  bool isMu = false;
+  bool isEl = false;
+  
+  TruthParticle* mu_ZcandImpact;
+  //loop over all muons and electrons, check for separation from signal leptons (in the meaning of DeltaR). If one SFOS pair is closer to Zmass, use this third lepton. Mark if it is electron or muon with 'isEl' and 'isMu'
+  for(uint im=0; im<Muons_all_vec.size(); im++){
+    mu_ZcandImpact = Muons_all_vec.at(im);
+//     mu_ZcandImpact->setState(SysSetting, n0150BugFix);
+    
+    
+    if((mu_ZcandImpact->DeltaR(*mu) < 0.05) || mu_ZcandImpact->DeltaR(*el) < 0.05) continue;  //only check for separation of signal leptons
+
+    
+    if((mu_ZcandImpact->charge * mu->charge)<0.){
+	if((fabs(MZ - SusyNtAna::Mll(mu, mu_ZcandImpact)) < DeltaMZ_lZcandImpact_mu)){
+	  DeltaMZ_lZcandImpact_mu = fabs(MZ - SusyNtAna::Mll(mu, mu_ZcandImpact));
+	  mu_ZcandImpact_lost = mu_ZcandImpact;
+	  Muon_ZcandImpact_vec.push_back(mu_ZcandImpact);
+	}
+    }
+    
+  }
+
+  TruthParticle* el_ZcandImpact;
+  for(uint ie=0; ie<Electrons_all_vec.size(); ie++){
+    el_ZcandImpact = Electrons_all_vec.at(ie);
+//     el_ZcandImpact->setState(SysSetting);
+
+    if((el_ZcandImpact->DeltaR(*mu) < 0.05) || (el_ZcandImpact->DeltaR(*el) < 0.05)) continue; //only check for separation of signal leptons
+
+    if((el_ZcandImpact->charge * el->charge)<0.){
+      if(fabs(MZ - SusyNtAna::Mll(el, el_ZcandImpact)) < DeltaMZ_lZcandImpact_el){
+	DeltaMZ_lZcandImpact_el = fabs(MZ - SusyNtAna::Mll(el, el_ZcandImpact));
+	el_ZcandImpact_lost = el_ZcandImpact;
+	Electron_ZcandImpact_vec.push_back(el_ZcandImpact);
+      }
+    }
+  }
+  
+ 
+  if(DeltaMZ_lZcandImpact_mu < DeltaMZ_lZcandImpact_el) isMu = true;
+ 
+  else if (DeltaMZ_lZcandImpact_mu > DeltaMZ_lZcandImpact_el) isEl = true;
+    
+  
+  if(isMu){      
+    mllZcandImpact_mu_EM = SusyNtAna::Mll(mu, mu_ZcandImpact_lost);  
+  }
+  
+  if( isEl){    
+    mllZcandImpact_el_EM = SusyNtAna::Mll(el, el_ZcandImpact_lost);      
+  }
+  
+
+}
+
+  
+
+void TSelector_SusyNtuple_Truth::fillHistos_EE_SRSS1(float cut_EE, float weight_ALL_EE){  
+
+}
+
+
+void TSelector_SusyNtuple_Truth::fillHistos_MM_SRSS1(float cut_MM, float weight_ALL_MM){
+  
+}
+
+void TSelector_SusyNtuple_Truth::fillHistos_EM_SRSS1(float cut_EM, float weight_ALL_EM){
+  
+}
+
+
