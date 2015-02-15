@@ -435,7 +435,6 @@ class TSelector_SusyNtuple_Truth : public SusyNtTruthAna
     ClassDef(TSelector_SusyNtuple_Truth, 1);
 
   protected:
-    int sample_identifier;
     std::string         m_sel;          // event selection string
 
     DilTrigLogic*      m_trigObjWithoutRU;      // My trigger logic class
