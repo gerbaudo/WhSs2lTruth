@@ -179,6 +179,8 @@ class TSelector_SusyNtuple_Truth : public SusyNtTruthAna
     // Selection region
     void setSelection(std::string s) { m_sel = s; }
 
+    void print_counters() const;
+
     // debug check
     bool debugEvent();
     bool makeNTuple;
@@ -473,8 +475,14 @@ class TSelector_SusyNtuple_Truth : public SusyNtTruthAna
   }
   
    TTree *tree_out;
-
-  private:
+   
+   size_t counter_input;
+   size_t counter_event_cleaning;
+   size_t counter_EE, counter_EM, counter_MM;
+   size_t counter_EE_SRSS1, counter_EE_SRSS2;
+   size_t counter_EM_SRSS1, counter_EM_SRSS2;
+   size_t counter_MM_SRSS1, counter_MM_SRSS2;
+ private:
     TFile *file_;
     TTree *tree_;
     FourMom l0_, l1_, met_;

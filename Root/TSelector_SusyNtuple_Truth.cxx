@@ -22,6 +22,14 @@ TSelector_SusyNtuple_Truth::TSelector_SusyNtuple_Truth() :
         m_vetoSFOS (false),
         m_writeOut (false),
         tree_out(0),
+        counter_input(0),
+        counter_event_cleaning(0),
+        counter_EE(0),
+        counter_EM(0),
+        counter_MM(0),
+        counter_EE_SRSS1(0), counter_EE_SRSS2(0),
+        counter_EM_SRSS1(0), counter_EM_SRSS2(0),
+        counter_MM_SRSS1(0), counter_MM_SRSS2(0),
         file_(0),
         tree_(0)
 {
@@ -65,6 +73,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
     GetEntry(entry); //function from SusyNtAna.h
     clearTruthObjects(); //function from SusyNtAna.cxx
     m_chainEntry++;
+    counter_input++;
     unsigned int mcid;
 //   cout << "nt.evt()->mcChannel= " << nt.evt()->mcChannel << endl;
     if(nt.evt()->isMC){
@@ -144,7 +153,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
     if(doEventCleaning_andFillHistos(truthJets, truthMet, truthMuons, truthElectrons,
                                      flag, weight_ALL_EE, weight_ALL_MM, weight_ALL_EM,
                                      SysSetting, n0150BugFix)) {
-
+        counter_event_cleaning++;
         //Set TLorentzVector for jets:
         TruthJet* jet0_buff=NULL;
         TruthJet* jet1_buff=NULL;
@@ -186,6 +195,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
         if(truthElectrons.size() == 2){
             cutnumber = 15.; fillHistos_EE_SRSS1(cutnumber, weight_ALL_EE);
             if(signal_truthElectrons.size() == 2){
+                counter_EE++;
                 cutnumber = 16.; fillHistos_EE_SRSS1(cutnumber, weight_ALL_EE);
                 if(signal_truthTaus.size()==0){
                     cutnumber = 17.; fillHistos_EE_SRSS1(cutnumber, weight_ALL_EE);
@@ -243,6 +253,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
                                                             if(METrel_EE > 55.){
                                                                 cutnumber = 32.;  fillHistos_EE_SRSS1(cutnumber, weight_ALL_EE);
                                                                 cutnumber = 33.;  fillHistos_EE_SRSS1(cutnumber, weight_ALL_EE);
+                                                                counter_EE_SRSS1++;
                                                             } // metrel>55
                                                         }//ht>200
                                                     }//mlj>90
@@ -273,6 +284,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
                                                                                            useForwardJets);
                                                             if(METrel_EE>=30.){
                                                                 cutnumber = 41.;  fillHistos_EE_SRSS1(cutnumber, weight_ALL_EE);
+                                                                counter_EE_SRSS2++;
                                                             } // metrel>30
                                                         } // mljj<120
                                                     } // mtmax >110
@@ -293,6 +305,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
         if(truthMuons.size() == 2){
             cutnumber = 15.; fillHistos_MM_SRSS1(cutnumber, weight_ALL_MM);
             if(signal_truthMuons.size()==2){
+                counter_MM++;
                 cutnumber = 16.; fillHistos_MM_SRSS1(cutnumber, weight_ALL_MM);
                 if(signal_truthTaus.size()==0){
                     cutnumber = 17.; fillHistos_MM_SRSS1(cutnumber, weight_ALL_MM);
@@ -349,6 +362,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
 
                                                             if(HT_MM > 200.){
                                                                 cutnumber = 31.;  fillHistos_MM_SRSS1(cutnumber, weight_ALL_MM);
+                                                                counter_MM_SRSS1++;
                                                             }
                                                         }
                                                     }
@@ -370,6 +384,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
                                                         cutnumber = 39.;  fillHistos_MM_SRSS1(cutnumber, weight_ALL_MM);
                                                         if(HT_MM >= 200.){
                                                             cutnumber = 40.;  fillHistos_MM_SRSS1(cutnumber, weight_ALL_MM);
+                                                            counter_MM_SRSS2++;
                                                         }
                                                     }
                                                 }
@@ -389,6 +404,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
         if(truthElectrons.size() == 1 && truthMuons.size() == 1){
             cutnumber = 15.; fillHistos_EM_SRSS1(cutnumber, weight_ALL_EM);
             if(signal_truthElectrons.size()==1 && signal_truthMuons.size()==1){
+                counter_EM++;
                 cutnumber = 16.; fillHistos_EM_SRSS1(cutnumber, weight_ALL_EM);
                 if(signal_truthTaus.size()==0){
                     cutnumber = 17.; fillHistos_EM_SRSS1(cutnumber, weight_ALL_EM);
@@ -435,6 +451,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
                                                                 cutnumber = 31.; fillHistos_EM_SRSS1(cutnumber, weight_ALL_EM);
                                                                 cutnumber = 32.; fillHistos_EM_SRSS1(cutnumber, weight_ALL_EM);
                                                                 cutnumber = 33.; fillHistos_EM_SRSS1(cutnumber, weight_ALL_EM);
+                                                                counter_EM_SRSS1++;
                                                             }
                                                         }
                                                     }
@@ -457,6 +474,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
                                                             cutnumber = 39.; fillHistos_EM_SRSS1(cutnumber, weight_ALL_EM);
                                                             if(HT_EM > 200.){
                                                                 cutnumber = 41.; fillHistos_EM_SRSS1(cutnumber, weight_ALL_EM);
+                                                                counter_EM_SRSS2++;
                                                             }
                                                         }
                                                     }
@@ -1819,6 +1837,9 @@ void TSelector_SusyNtuple_Truth::calc_EM_variables(TruthParticle* mu, TruthParti
     if(isEl){ mllZcandImpact_el_EM = SusyNtAna::Mll(el, el_ZcandImpact_lost); }
 }
 
+void TSelector_SusyNtuple_Truth::fillHistos_EE(int cutnumber, float weight) { }
+void TSelector_SusyNtuple_Truth::fillHistos_MM(int cutnumber, float weight) { }
+void TSelector_SusyNtuple_Truth::fillHistos_EM(int cutnumber, float weight) { }
 void TSelector_SusyNtuple_Truth::fillHistos_EE_SRSS1(float cut_EE, float weight_ALL_EE)
 {
 
@@ -1832,4 +1853,19 @@ void TSelector_SusyNtuple_Truth::fillHistos_MM_SRSS1(float cut_MM, float weight_
 void TSelector_SusyNtuple_Truth::fillHistos_EM_SRSS1(float cut_EM, float weight_ALL_EM)
 {
 
+}
+
+void TSelector_SusyNtuple_Truth::print_counters() const
+{
+    cout<<endl
+        <<"Counts summary:"<<endl
+        <<"counter_input          : "<<counter_input          <<endl
+        <<"counter_event_cleaning : "<<counter_event_cleaning <<endl
+        <<"counter_EE             : "<<counter_EE             <<endl
+        <<"counter_EM             : "<<counter_EM             <<endl
+        <<"counter_MM             : "<<counter_MM             <<endl  
+        <<"counter_EE_SRSS1 : "<<counter_EE_SRSS1<<" counter_EE_SRSS2 : "<<counter_EE_SRSS2<<endl
+        <<"counter_EM_SRSS1 : "<<counter_EM_SRSS1<<" counter_EM_SRSS2 : "<<counter_EM_SRSS2<<endl
+        <<"counter_MM_SRSS1 : "<<counter_MM_SRSS1<<" counter_MM_SRSS2 : "<<counter_MM_SRSS2<<endl
+        <<endl;
 }

@@ -56,5 +56,6 @@ int main(int argc, char **argv)
 
   chain.Process(&analysis, sampleName.c_str()); 
   cout<<"Total entries:   "<<nEntries<<endl;
+  analysis.print_counters();
   return 0;
 }
