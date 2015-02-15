@@ -28,8 +28,8 @@ using Susy::Jet;
 using Susy::Met;
 struct FourMom {
     double px, py, pz, E;
-    bool isMu, isEl, isJet;
     int q;
+    bool isMu, isEl, isJet;
     FourMom() : px(0), py(0), pz(0), E(0), q(0), isMu(false), isEl(false), isJet(false) {}
 #ifndef __CINT__
 // cint is not able to parse 'complex' code; see
@@ -79,7 +79,6 @@ class TSelector_SusyNtuple_Truth : public SusyNtTruthAna
   
   // Output Text File
   ofstream out;
-
   // Begin is called before looping on entries
   virtual void    Begin(TTree *tree);
   virtual void    SlaveBegin(TTree *tree);
@@ -87,11 +86,6 @@ class TSelector_SusyNtuple_Truth : public SusyNtTruthAna
 
   virtual void    Terminate();
   virtual void    SlaveTerminate();
-    
-  
-
-
-    
 		     
     // Cut methods
     /* bool CheckRealLeptons(const ElectronVector& signal_electrons, MuonVector& signal_muons); */

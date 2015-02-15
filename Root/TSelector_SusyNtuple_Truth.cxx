@@ -7,7 +7,7 @@
 
 #include <iomanip>
 #include <string>
-#include <strstream>
+//#include <strstream>
 using namespace std;
 using namespace Susy;
 // using FourMom;
@@ -20,9 +20,10 @@ TSelector_SusyNtuple_Truth::TSelector_SusyNtuple_Truth() :
         m_vetoB (false),
         m_selectSFOS(false),
         m_vetoSFOS (false),
-	file_(0),
-	tree_(0),
-        m_writeOut (false)
+        m_writeOut (false),
+        tree_out(0),
+        file_(0),
+        tree_(0)
 {
 //   setAnaType(Ana_2LepWH);
   setDebug(false);
@@ -77,7 +78,7 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
 
 
     if(m_dbg || m_chainEntry%50000==0) {
-        float recalc_sumw = 0.;
+        // float recalc_sumw = 0.;
 //     SumwMapKey genKey(mcid, 0);
 //     map<unsigned int, float>::const_iterator sumwMapIter = m_sumwMap.find(genKey);
 //     if(sumwMapIter != m_sumwMap.end()) recalc_sumw = sumwMapIter->second;
@@ -145,8 +146,8 @@ Bool_t TSelector_SusyNtuple_Truth::Process(Long64_t entry)
                                      SysSetting, n0150BugFix)) {
 
         //Set TLorentzVector for jets:
-        TruthJet* jet0_buff;
-        TruthJet* jet1_buff;
+        TruthJet* jet0_buff=NULL;
+        TruthJet* jet1_buff=NULL;
         TLorentzVector signalJet0_buff_TLV, signalJet1_buff_TLV;
         //nSignalJets = signal_truthJets.size(); // computed in calcJet_variables
         if(nSignalJets >=1){
@@ -1773,8 +1774,8 @@ void TSelector_SusyNtuple_Truth::calc_EM_variables(TruthParticle* mu, TruthParti
     double DeltaMZ_lZcandImpact_el = 99999.;
     TruthParticleVector Muon_ZcandImpact_vec;
     TruthParticleVector Electron_ZcandImpact_vec;
-    TruthParticle* mu_ZcandImpact_lost;
-    TruthParticle* el_ZcandImpact_lost;
+    TruthParticle* mu_ZcandImpact_lost=NULL;
+    TruthParticle* el_ZcandImpact_lost=NULL;
 
     bool isMu = false;
     bool isEl = false;
