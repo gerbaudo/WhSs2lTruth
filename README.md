@@ -45,7 +45,7 @@ rc build
 ```
 cd WhSs2lTruth/run/
 run_truth_selector -i `cat filelist_notauhad_WH_2Lep_1.txt `
-``
+```
 
 the output will be
 
